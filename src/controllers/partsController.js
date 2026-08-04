@@ -1,12 +1,12 @@
 import { withSession } from '../utils/db.js';
-import { makeId, sendDbError } from '../utils/errors.js';
+import { makeId, sendDbError, sendSuccess, sendFail } from '../utils/errors.js';
 import { CREATE_PART, LINK_PART_TO_PRODUCT } from '../utils/queries.js';
 import { createPartSchema, validateValue } from '../validators/schemas.js';
 
 export async function createPart(req, res) {
   const parsed = validateValue(createPartSchema, req.body);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
 
   const { name, criticality, supplierId } = parsed.value;
@@ -59,7 +59,7 @@ export async function createPart(req, res) {
       return result;
     });
 
-    res.status(201).json({ part });
+    sendSuccess(res, { part }, 201);
   } catch (err) {
     sendDbError(res, err, 'Failed to create part.', '[parts POST]');
   }

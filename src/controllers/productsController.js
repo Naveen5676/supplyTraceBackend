@@ -1,5 +1,5 @@
 import { withSession } from '../utils/db.js';
-import { makeId, toNumber, sendDbError } from '../utils/errors.js';
+import { makeId, toNumber, sendDbError, sendSuccess, sendFail } from '../utils/errors.js';
 import {
   LIST_PRODUCTS,
   PRODUCT_DETAIL,
@@ -15,7 +15,7 @@ import {
 export async function listProducts(req, res) {
   const parsed = validateValue(searchQuerySchema, req.query);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const { search } = parsed.value;
 
@@ -28,7 +28,7 @@ export async function listProducts(req, res) {
         category: r.get('category'),
       }));
     });
-    res.json({ products });
+    sendSuccess(res, { products });
   } catch (err) {
     sendDbError(res, err, 'Failed to list products.', '[products]');
   }
@@ -37,7 +37,7 @@ export async function listProducts(req, res) {
 export async function createProduct(req, res) {
   const parsed = validateValue(createProductSchema, req.body);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const { name, category } = parsed.value;
   const id = makeId('prod');
@@ -52,7 +52,7 @@ export async function createProduct(req, res) {
         category: r.get('category'),
       };
     });
-    res.status(201).json({ product });
+    sendSuccess(res, { product }, 201);
   } catch (err) {
     sendDbError(res, err, 'Failed to create product.', '[products POST]');
   }
@@ -61,7 +61,7 @@ export async function createProduct(req, res) {
 export async function getProduct(req, res) {
   const parsed = validateValue(idParamSchema, req.params);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const productId = parsed.value.id;
 
@@ -115,9 +115,9 @@ export async function getProduct(req, res) {
     });
 
     if (!product) {
-      return res.status(404).json({ error: 'not_found', message: 'Product not found.' });
+      return sendFail(res, 404, 'not_found', 'Product not found.');
     }
-    res.json({ product });
+    sendSuccess(res, { product });
   } catch (err) {
     sendDbError(res, err, 'Failed to load product.', '[products/:id]');
   }

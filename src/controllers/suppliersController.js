@@ -1,5 +1,5 @@
 import { withSession } from '../utils/db.js';
-import { makeId, toNumber, sendDbError } from '../utils/errors.js';
+import { makeId, toNumber, sendDbError, sendSuccess, sendFail } from '../utils/errors.js';
 import {
   LIST_SUPPLIERS,
   SUPPLIER_IMPACT,
@@ -20,7 +20,7 @@ const CRIT_WEIGHT = { high: 3, medium: 2, low: 1 };
 export async function listSuppliers(req, res) {
   const parsed = validateValue(searchQuerySchema, req.query);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const { search } = parsed.value;
 
@@ -34,7 +34,7 @@ export async function listSuppliers(req, res) {
         riskScore: toNumber(r.get('riskScore')),
       }));
     });
-    res.json({ suppliers });
+    sendSuccess(res, { suppliers });
   } catch (err) {
     sendDbError(res, err, 'Failed to list suppliers.', '[suppliers]');
   }
@@ -43,7 +43,7 @@ export async function listSuppliers(req, res) {
 export async function createSupplier(req, res) {
   const parsed = validateValue(createSupplierSchema, req.body);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const { name, country, riskScore } = parsed.value;
   const id = makeId('sup');
@@ -64,7 +64,7 @@ export async function createSupplier(req, res) {
         riskScore: toNumber(r.get('riskScore')),
       };
     });
-    res.status(201).json({ supplier });
+    sendSuccess(res, { supplier }, 201);
   } catch (err) {
     sendDbError(res, err, 'Failed to create supplier.', '[suppliers POST]');
   }
@@ -73,7 +73,7 @@ export async function createSupplier(req, res) {
 export async function getSupplierImpact(req, res) {
   const parsed = validateValue(idParamSchema, req.params);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const supplierId = parsed.value.id;
 
@@ -164,9 +164,9 @@ export async function getSupplierImpact(req, res) {
     });
 
     if (!impact) {
-      return res.status(404).json({ error: 'not_found', message: 'Supplier not found.' });
+      return sendFail(res, 404, 'not_found', 'Supplier not found.');
     }
-    res.json({ impact });
+    sendSuccess(res, { impact });
   } catch (err) {
     sendDbError(res, err, 'Failed to compute supplier impact.', '[suppliers/:id/impact]');
   }
@@ -175,7 +175,7 @@ export async function getSupplierImpact(req, res) {
 export async function getPartDependencyPaths(req, res) {
   const parsed = validateValue(partPathQuerySchema, req.query);
   if (parsed.error) {
-    return res.status(400).json({ error: 'bad_request', message: parsed.error });
+    return sendFail(res, 400, 'bad_request', parsed.error);
   }
   const { from: fromPartId, to: toPartId } = parsed.value;
 
@@ -191,7 +191,7 @@ export async function getPartDependencyPaths(req, res) {
       }));
       return [{ nodes, hops }];
     });
-    res.json({ fromPartId, toPartId, paths });
+    sendSuccess(res, { fromPartId, toPartId, paths });
   } catch (err) {
     sendDbError(res, err, 'Failed to find dependency paths.', '[paths/parts]');
   }

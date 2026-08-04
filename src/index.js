@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { closeDriver } from './utils/db.js';
+import { sendFail } from './utils/errors.js';
 import healthRouter from './routes/health.js';
 import productsRouter from './routes/products.js';
 import suppliersRouter from './routes/suppliers.js';
@@ -26,12 +27,12 @@ app.use('/api/suppliers', suppliersRouter);
 app.use('/api/parts', partsRouter);
 
 app.use((_req, res) => {
-  res.status(404).json({ error: 'not_found', message: 'Route not found.' });
+  sendFail(res, 404, 'not_found', 'Route not found.');
 });
 
 app.use((err, _req, res, _next) => {
   console.error('[unhandled]', err);
-  res.status(500).json({ error: 'internal_error', message: 'Unexpected server error.' });
+  sendFail(res, 500, 'internal_error', 'Unexpected server error.');
 });
 
 const server = app.listen(PORT, () => {
