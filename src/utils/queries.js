@@ -2,10 +2,6 @@
  * Prefer flat row returns (CognoDB-safe); aggregate maps in Node when needed.
  */
 
-export const PING = `
-  RETURN 1 AS ok
-`;
-
 export const LIST_PRODUCTS = `
   MATCH (p:Product)
   WHERE $search IS NULL OR $search = ''

@@ -6,7 +6,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { closeDriver } from './utils/db.js';
 import { sendFail } from './utils/errors.js';
-import healthRouter from './routes/health.js';
 import productsRouter from './routes/products.js';
 import suppliersRouter from './routes/suppliers.js';
 import partsRouter from './routes/parts.js';
@@ -21,7 +20,6 @@ app.use(helmet());
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-app.use('/api', healthRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/suppliers', suppliersRouter);
 app.use('/api/parts', partsRouter);
