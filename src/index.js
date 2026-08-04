@@ -4,6 +4,11 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { closeDriver } from './utils/db.js';
+import healthRouter from './routes/health.js';
+import productsRouter from './routes/products.js';
+import suppliersRouter from './routes/suppliers.js';
+import partsRouter from './routes/parts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -15,9 +20,10 @@ app.use(helmet());
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
+app.use('/api', healthRouter);
+app.use('/api/products', productsRouter);
+app.use('/api/suppliers', suppliersRouter);
+app.use('/api/parts', partsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not_found', message: 'Route not found.' });
@@ -28,6 +34,15 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'internal_error', message: 'Unexpected server error.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`SupplyTrace API listening on http://localhost:${PORT}`);
 });
+
+async function shutdown() {
+  server.close();
+  await closeDriver();
+  process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
